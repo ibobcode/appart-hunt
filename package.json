@@ -1,0 +1,17 @@
+{
+  "name": "apphunt",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "dotenv": "^8.1.0",
+    "form-urlencoded": "^4.0.0",
+    "mongoose": "^5.7.1",
+    "node-fetch": "^2.6.0",
+    "puppeteer": "^1.20.0"
+  }
+}

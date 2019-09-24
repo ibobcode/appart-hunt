@@ -1,0 +1,5 @@
+/node_modules
+*.log
+tmpOnlineFile.jpg
+.DS_Store
+/.env

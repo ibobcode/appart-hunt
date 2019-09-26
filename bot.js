@@ -2,6 +2,8 @@ require("dotenv").config();
 const chalk = require("chalk");
 const NavigationManager = require("./navigationManager");
 const fetch = require("node-fetch");
+const bodyParser = require("body-parser");
+const express = require("express");
 
 let nm = new NavigationManager();
 
@@ -116,3 +118,25 @@ async function main() {
 }
 
 main();
+
+if (process.env.ENV === "prod") {
+  const app = express();
+  app.use(bodyParser.json());
+
+  app.get("/", (x, res) => {
+    res.send("Appart hunt is alive!");
+  });
+  app
+    .listen(process.env.PORT, () => {
+      console.log(
+        chalk.green.inverse(
+          ` - ALIVE PAGE IS NOW RUNNING ON PORT ${process.env.PORT} - `
+        )
+      );
+    })
+    .on("SERVER ERROR", console.log);
+  app.get("/death", (req, res) => {
+    res.send("Killing the bot...");
+    process.exit();
+  });
+}

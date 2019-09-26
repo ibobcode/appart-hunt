@@ -157,7 +157,12 @@ module.exports = class NavigationManager {
     })
       .then(a => a.text())
       .then(a => {
-        const res = JSON.parse(a);
+        try {
+          const res = JSON.parse(a);
+        } catch (error) {
+          console.log(a);
+          throw "PROBLEM BOSS!";
+        }
         return res.ads;
       });
   }

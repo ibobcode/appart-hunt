@@ -28,7 +28,7 @@ const submit = async data => {
     });
 };
 
-const notify = async data => {
+const notify = async (data, website) => {
   console.log(chalk.cyan.bold(" -> Notifying IFTTT..."));
   return fetch(
     `https://maker.ifttt.com/trigger/MYPING/with/key/${process.env.IFTTT_KEY}`,
@@ -37,7 +37,7 @@ const notify = async data => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        value1: "SELOGER",
+        value1: website,
         value2: `${data.place}ème`,
         value3: `${data.price}€`
       }),
@@ -53,18 +53,65 @@ const notify = async data => {
 async function main() {
   console.log(chalk.green.inverse(" - START - "));
   await nm.init();
-  await nm.openSL();
+  if (process.env.CRW_SL === "true") {
+    await nm.openSL();
+  }
+  if (process.env.CRW_LBC === "true") {
+    console.log(chalk.yellow.bold(" -> Fetching LBC ..."));
+  }
   while (true) {
-    const slLinks = await nm.getNewAptsSL();
-    console.log(slLinks);
-    if (slLinks) {
-      for (let index = 0; index < slLinks.length; index += 1) {
-        const data = await nm.scrapSL(slLinks[index]);
-        await submit(data);
-        await notify(data);
+    if (process.env.CRW_SL === "true") {
+      try {
+        const slLinks = await nm.getNewAptsSL();
+        if (slLinks.length) {
+          console.log(slLinks);
+          for (let index = 0; index < slLinks.length; index += 1) {
+            const data = await nm.scrapSL(slLinks[index]);
+            await submit(data);
+            await notify(data, "SELOGER");
+          }
+        }
+      } catch (error) {
+        console.log(chalk.red.inverse("CRASH SL"));
+        console.log(error);
       }
     }
-    await clock(5000);
+    if (process.env.CRW_LBC === "true") {
+      try {
+        const ads = await nm.getNewAptsLBC();
+        if (ads.length) {
+          // console.log(ads);
+          for (let index = 0; index < ads.length; index += 1) {
+            const data = {
+              link: ads[index].url,
+              rooms:
+                ads[index].attributes[
+                  ads[index].attributes.findIndex(e => e.key === "rooms")
+                ].value,
+              size:
+                ads[index].attributes[
+                  ads[index].attributes.findIndex(e => e.key === "square")
+                ].value,
+              price: ads[index].price[0],
+              place: ads[index].location.zipcode,
+              desc: ads[index].subject,
+              specs: ads[index].body,
+              tel: "Too complicated",
+              agenceAddr: "Not available",
+              agenceLink: "Not available",
+              agenceName: ads[index].owner.name
+            };
+            console.log(data);
+            await submit(data);
+            await notify(data, "LEBONCOIN");
+          }
+        }
+      } catch (error) {
+        console.log(chalk.red.inverse("CRASH LBC"));
+        console.log(error);
+      }
+    }
+    await clock(10000);
   }
 }
 

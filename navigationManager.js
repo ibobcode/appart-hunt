@@ -1,6 +1,7 @@
 const puppeteer = require("puppeteer");
 const chalk = require("chalk");
 var mongoose = require("mongoose");
+const fetch = require("node-fetch");
 var Schema = mongoose.Schema;
 
 var aptsLinksSchema = new Schema({
@@ -32,6 +33,7 @@ module.exports = class NavigationManager {
         return rej();
       });
       this.db.once("open", () => {
+        console.log(chalk.green.inverse(" - DATABASE CONNECTED - "));
         this.online = true;
         return res();
       });
@@ -61,7 +63,7 @@ module.exports = class NavigationManager {
   }
 
   async scrapSL(link) {
-    console.log(chalk.cyan.bold(" -> Crawling SL page..."));
+    console.log(chalk.red.bold(" -> Crawling SL page..."));
     console.log(link);
     await this.pageCrawlSL.goto(link);
     // await this.pageCrawlSL.waitForNavigation();
@@ -101,7 +103,7 @@ module.exports = class NavigationManager {
       let agenceLink = "X";
       if (document.getElementsByClassName("agence-link").length) {
         agenceLink = [...document.getElementsByClassName("agence-link")][0]
-          .baseURI;
+          .href;
       }
       let agenceName = "X";
       if (document.getElementsByClassName("agence-title").length) {
@@ -126,23 +128,47 @@ module.exports = class NavigationManager {
 
   async openSL() {
     this.pageSL = await this.browser.newPage();
-    console.log(chalk.cyan.bold(" -> New Page Seloger"));
+    console.log(chalk.red.bold(" -> New Page Seloger"));
     await this.pageSL.goto(
       `https://www.seloger.com/list_beta.htm${process.env.SL_SEARCH}`
     );
     this.pageCrawlSL = await this.browser.newPage();
-    console.log(chalk.cyan.bold(" -> New Crawlpage Seloger"));
+    console.log(chalk.red.bold(" -> New Crawlpage Seloger"));
+  }
+
+  async openLBC() {
+    this.pageLBC = await this.browser.newPage();
+    console.log(chalk.orange.bold(" -> New Page Leboncoin"));
+    await this.pageLBC.goto(
+      `https://www.leboncoin.fr/recherche/${process.env.LBC_SEARCH_URL}`
+    );
+    this.pageCrawlLBC = await this.browser.newPage();
+    console.log(chalk.orange.bold(" -> New Crawlpage Leboncoin"));
+  }
+
+  async fetchLbc() {
+    return fetch("https://api.leboncoin.fr/finder/search", {
+      headers: {
+        "content-type": "application/json",
+        "sec-fetch-mode": "cors"
+      },
+      body: process.env.LBC_SEARCH,
+      method: "POST"
+    })
+      .then(a => a.text())
+      .then(a => {
+        const res = JSON.parse(a);
+        return res.ads;
+      });
   }
 
   async getNewAptsSL() {
-    console.log(chalk.cyan.bold(" -> Reloading Seloger"));
     await this.pageSL.reload();
-    console.log(chalk.cyan.bold(" -> Scraping Seloger apts list"));
     let ret = await this.pageSL.evaluate(async () => {
       const list = await document.getElementsByName("classified-link");
       const obj = [];
       for (const elem of list) {
-        obj.push({ link: elem.href, type: "sl" });
+        obj.push({ link: elem.href.split("?")[0], type: "sl" });
       }
       return obj;
     });
@@ -156,5 +182,21 @@ module.exports = class NavigationManager {
       console.log(chalk.green.bold(" -> New appt !"));
     }
     return ret.map(elem => elem.link);
+  }
+
+  async getNewAptsLBC() {
+    let ret = await this.fetchLbc();
+    ret = ret.filter(
+      elem1 =>
+        this.linksHistory.findIndex(elem2 => elem1.url === elem2.link) === -1
+    );
+    ret.forEach(elem => this.aptsLinkCOU({ link: elem.url, type: "lbc" }));
+    this.linksHistory = ret
+      .map(a => ({ link: a.url, type: "lbc" }))
+      .concat(this.linksHistory);
+    if (ret.length !== 0) {
+      console.log(chalk.green.bold(" -> New appt !"));
+    }
+    return ret;
   }
 };

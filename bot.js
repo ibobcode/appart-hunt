@@ -118,7 +118,6 @@ async function main() {
 }
 
 main();
-
 if (process.env.ENV === "prod") {
   const app = express();
   app.use(bodyParser.json());

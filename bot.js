@@ -58,6 +58,9 @@ async function main() {
   if (process.env.CRW_SL === "true") {
     await nm.openSL();
   }
+  // if (process.env.CRW_LBC === "true") {
+  //   await nm.openLBC();
+  // }
   if (process.env.CRW_LBC === "true") {
     console.log(chalk.yellow.bold(" -> Fetching LBC ..."));
   }

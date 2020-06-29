@@ -18,7 +18,7 @@ const submit = async data => {
       headers: {
         "content-type": "application/x-www-form-urlencoded"
       },
-      body: encodeURI(`entry.${process.env.ENTRY_1_ROOMS}=${data.rooms}&entry.${process.env.ENTRY_2_PLACE}=${data.place}&entry.${process.env.ENTRY_3_DESC}=${data.desc}&entry.${process.env.ENTRY_4_SPECS}=${data.specs}&entry.${process.env.ENTRY_5_PRICE}=${data.price}&entry.${process.env.ENTRY_6_TEL}=${data.tel}&entry.${process.env.ENTRY_7_SIZE}=${data.size}&entry.${process.env.ENTRY_8_AG_ADDR}=${data.agenceAddr}&entry.${process.env.ENTRY_9_AG_LINK}=${data.agenceLink}&entry.${process.env.ENTRY_10_AG_NAME}=${data.agenceName}&entry.${process.env.ENTRY_11_LINK}=${data.link}&entry.${process.env.ENTRY_12_PREVIEW}=${data.preview}
+      body: encodeURI(`entry.${process.env.ENTRY_1_ROOMS}=${data.rooms}&entry.${process.env.ENTRY_2_PLACE}=${data.place}&entry.${process.env.ENTRY_3_DESC}=${data.desc}&entry.${process.env.ENTRY_4_SPECS}=${data.specs}&entry.${process.env.ENTRY_5_PRICE}=${data.price}&entry.${process.env.ENTRY_6_TEL}=${data.tel}&entry.${process.env.ENTRY_7_SIZE}=${data.size}&entry.${process.env.ENTRY_8_AG_ADDR}=${data.agenceAddr}&entry.${process.env.ENTRY_9_AG_LINK}=${data.agenceLink}&entry.${process.env.ENTRY_10_AG_NAME}=${data.agenceName}&entry.${process.env.ENTRY_11_LINK}=${data.link}
     `),
       method: "POST",
       mode: "cors"
@@ -33,15 +33,15 @@ const submit = async data => {
 const notify = async (data, website) => {
   console.log(chalk.cyan.bold(" -> Notifying IFTTT..."));
   return fetch(
-    `https://maker.ifttt.com/trigger/NEW_FLAT/with/key/${process.env.IFTTT_KEY}`,
+    `https://maker.ifttt.com/trigger/MYPING/with/key/${process.env.IFTTT_KEY}`,
     {
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        value1: `Prix : ${data.price}€\nEmplacement : ${data.place}ème\nSurface : ${data.size}m2` ,
-        value2: data.link,
-        value3: data.preview
+        value1: website,
+        value2: `${data.place}ème`,
+        value3: `${data.price}€`
       }),
       method: "POST"
     }
